@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QR Code Scanner</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode@latest/dist/html5-qrcode.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,7 +35,6 @@
   <button id="restart-button">Scan Again</button>
 
   <script>
-    // Function to send data to Google Sheets
     async function sendDataToGoogleSheet(qrData) {
       const url = 'https://script.google.com/macros/s/AKfycbzRPLmhFFPMrXja2WHtArjGbk7ImlPx0V04LO956cc/dev'; // Replace with your Google Apps Script URL
       const data = { data: qrData };
@@ -56,12 +55,10 @@
       }
     }
 
-    // Initialize the QR code scanner
     const html5QrCode = new Html5Qrcode('qr-reader');
     const restartButton = document.getElementById('restart-button');
 
     const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-      // Stop scanning after a QR code is detected
       html5QrCode.stop().then(() => {
         console.log('QR Code scanned:', decodedText);
         document.getElementById('result').innerText = `Scanned: ${decodedText}`;
@@ -78,7 +75,7 @@
     html5QrCode.start({ facingMode: 'environment' }, config, qrCodeSuccessCallback)
       .catch((err) => {
         console.error('Failed to start scanner:', err);
-        document.getElementById('result').innerText = 'Failed to start scanner. Please allow camera access.';
+        document.getElementById('result').innerText = `Failed to start scanner: ${err.message}`;
       });
 
     // Restart the scanner when the button is clicked
