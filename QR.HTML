@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    #restart-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Scanner</h1>
+  <div id="qr-reader"></div>
+  <p id="result"></p>
+  <button id="restart-button">Scan Again</button>
+
+  <script>
+    // Function to send data to Google Sheets
+    async function sendDataToGoogleSheet(qrData) {
+      const url = 'https://script.google.com/macros/s/AKfycbzRPLmhFFPMrXja2WHtArjGbk7ImlPx0V04LO956cc/dev'; // Replace with your Google Apps Script URL
+      const data = { data: qrData };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.text();
+        document.getElementById('result').innerText = result; // Display success message
+      } catch (error) {
+        document.getElementById('result').innerText = 'Error: ' + error.message;
+      }
+    }
+
+    // Initialize the QR code scanner
+    const html5QrCode = new Html5Qrcode('qr-reader');
+    const restartButton = document.getElementById('restart-button');
+
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+      // Stop scanning after a QR code is detected
+      html5QrCode.stop().then(() => {
+        console.log('QR Code scanned:', decodedText);
+        document.getElementById('result').innerText = `Scanned: ${decodedText}`;
+        restartButton.style.display = 'block'; // Show the restart button
+        sendDataToGoogleSheet(decodedText); // Send data to Google Sheets
+      }).catch((err) => {
+        console.error('Failed to stop scanning:', err);
+      });
+    };
+
+    const config = { fps: 10, qrbox: 250 };
+
+    // Start the scanner
+    html5QrCode.start({ facingMode: 'environment' }, config, qrCodeSuccessCallback)
+      .catch((err) => {
+        console.error('Failed to start scanner:', err);
+        document.getElementById('result').innerText = 'Failed to start scanner. Please allow camera access.';
+      });
+
+    // Restart the scanner when the button is clicked
+    restartButton.addEventListener('click', () => {
+      html5QrCode.start({ facingMode: 'environment' }, config, qrCodeSuccessCallback)
+        .catch((err) => {
+          console.error('Failed to restart scanner:', err);
+          document.getElementById('result').innerText = 'Failed to restart scanner.';
+        });
+      restartButton.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
